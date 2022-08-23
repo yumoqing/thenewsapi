@@ -1,18 +1,21 @@
 import requests
 from appPublic.http_client import Http_Client
+from appPublic.timeUtils import curDateString
 from uninews.baseprovider import BaseProvider
+from .version import __version__
 app_info = {}
-# myapp_key='eq2eutdVspOBY58qzXCRKs6uVCzoZnjhk9yLFams'
+
 def set_app_info(appkey):
 	app_info.update({
 		'appkey':appkey
 	})
 
-def buildProvider(newfeed):
+def buildProvider(newsfeed):
+	print(f'TheNewsApi version {__version__}')
 	return TheNewsApi(newsfeed)
 
 class TheNewsApi(BaseProvider):
-	def __init__(self):
+	def __init__(self, newsfeed):
 		self.newsfeed = newsfeed
 		self.appkey = app_info.get('appkey')
 
@@ -31,31 +34,43 @@ class TheNewsApi(BaseProvider):
 			'publish_date':'published_at'
 		}
 	
-	def news(self, q=None, categories=[],
-						countries=[], language=[], page=0):
+	def news(self, q=None, 
+						categories=[],
+						countries=[], 
+						language=[], 
+						page=0):
 		url = 'https://api.thenewsapi.com/v1/news/all'
-		return self._newcall(url, q, categories=categories,
+		return self._newscall(url, q, categories=categories,
 					countries=countries,
-					language=language, page=page)
+					language=language, 
+					page=page)
 
 	def headline(self, keyword, categories=[],
 						countries=[], language=[], page=0):
-		return None
+		url = 'https://api.thenewsapi.com/v1/news/headline'
+		return self._newscall(url, q, 
+						categories=categories,
+						countries=countries,
+						language=language, page=page)
 
 	def topstory(self, q=None, categories=[],
- 42                         countries=[], language=[], page=0):
+						countries=[], language=[], page=0):
 		url = 'https://api.thenewsapi.com/v1/news/top'
-		return self._newcall(url, q, categories=categories,
-					countries=countries,
-					 language=language, page=page)
+		return self._newscall(url, q, 
+						categories=categories,
+						countries=countries,
+						language=language, page=page)
 
 	def topic(self, q=None, language=[], countries=[],
-				language=[], categories=[], page_size=20,
-				page=page):
+				categories=[], page_size=20,
+				page=0):
 		return None
 
-	def _newcall(self, keyword, categories=[], countries=[],
-						language=[], page=0):
+	def _newscall(self, url, keyword, 
+						categories=[], 
+						countries=['cn'],
+						language=['zh'], 
+						page=0):
 		hc = Http_Client()
 		if keyword == '':
 			keyword = None
@@ -66,7 +81,9 @@ class TheNewsApi(BaseProvider):
 			'api_token':self.appkey,
 			'categories':categories, 
 			'language':language_str,
+			'published_on':curDateString(),
 			'locale':countries,
+			'limit':50,
 			'page':page,
 			'search':keyword
 		}
