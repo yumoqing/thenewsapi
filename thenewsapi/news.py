@@ -34,59 +34,95 @@ class TheNewsApi(BaseProvider):
 			'publish_date':'published_at'
 		}
 	
-	def news(self, q=None, 
+	def sources_result_mapping(self):
+		return {
+			'total':'meta.found',
+			'sources':'data'
+		}
+
+	def source_mapping(self):
+		return {
+			'id':'source_id',
+			'name':'domain',
+			'countries':'locale'
+		}
+
+	def last_news(self, q=None, 
 						categories=[],
 						countries=[], 
+						domains=[],
+						sources=[],
 						language=[], 
 						page=0):
 		url = 'https://api.thenewsapi.com/v1/news/all'
-		return self._newscall(url, q, categories=categories,
-					countries=countries,
-					language=language, 
-					page=page)
-
-	def headline(self, keyword, categories=[],
-						countries=[], language=[], page=0):
-		url = 'https://api.thenewsapi.com/v1/news/headline'
-		return self._newscall(url, q, 
-						categories=categories,
-						countries=countries,
-						language=language, page=page)
-
-	def topstory(self, q=None, categories=[],
-						countries=[], language=[], page=0):
-		url = 'https://api.thenewsapi.com/v1/news/top'
-		return self._newscall(url, q, 
-						categories=categories,
-						countries=countries,
-						language=language, page=page)
-
-	def topic(self, q=None, language=[], countries=[],
-				categories=[], page_size=20,
-				page=0):
-		return None
-
-	def _newscall(self, url, keyword, 
-						categories=[], 
-						countries=['cn'],
-						language=['zh'], 
-						page=0):
-		hc = Http_Client()
+		keyword = q
 		if keyword == '':
 			keyword = None
 		categories = self.newsfeed.array2param(categories)
 		language_str = self.newsfeed.array2param(language)
 		countries_str = self.newsfeed.array2param(countries)
+		domains = self.newsfeed.array2param(domains)
+		sources = self.newsfeed.array2param(sources)
 		p = {
 			'api_token':self.appkey,
 			'categories':categories, 
 			'language':language_str,
 			'published_on':curDateString(),
+			'domains':domains,
+			'source_ids':sources,
 			'locale':countries,
-			'limit':50,
 			'page':page,
 			'search':keyword
 		}
+		# print(url, p)
+		hc = Http_Client()
+		x = hc.get(url, params=p)
+		return x
+
+	def hist_news(self, q=None, categories=[],
+						countries=[], language=[], 
+						sources=[],
+						domains=[],
+						from_date=None,
+						to_date=None,
+						page=0):
+		url = 'https://api.thenewsapi.com/v1/news/top'
+		keyword = q
+		if keyword == '':
+			keyword = None
+		categories = self.newsfeed.array2param(categories)
+		language_str = self.newsfeed.array2param(language)
+		countries_str = self.newsfeed.array2param(countries)
+		domains = self.newsfeed.array2param(domains)
+		sources = self.newsfeed.array2param(sources)
+		p = {
+			'api_token':self.appkey,
+			'categories':categories, 
+			'language':language_str,
+			'published_on':curDateString(),
+			'domains':domains,
+			'sources':sources,
+			'published_after':from_date,
+			'published_before':to_date,
+			'page':page,
+			'search':keyword
+		}
+		# print(url, p)
+		hc = Http_Client()
+		x = hc.get(url, params=p)
+		return x
+
+	def sources(self, categories=[], language=[], countries=[]):
+		categories = self.newsfeed.array2param(categories)
+		language_str = self.newsfeed.array2param(language)
+		countries_str = self.newsfeed.array2param(countries)
+		url = 'https://api.thenewsapi.com/v1/news/sources'
+		p = {
+			'api_token':self.appkey,
+			'categories':categories,
+			'language':language_str
+		}
+		hc = Http_Client()
 		x = hc.get(url, params=p)
 		return x
 
